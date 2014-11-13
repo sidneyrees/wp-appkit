@@ -1,0 +1,27 @@
+<h2><%= list_title %><% total > 0 ? print(' - ' + total) : print(' - No') %> post<% total > 1 ? print('s') : '' %></h2>
+
+<% if(posts.length){ %>
+
+    <ul>
+
+        <% _.each( posts, function( post ){ %>
+
+            <li> 
+
+                <% if( post.thumbnail.src && post.thumbnail.src.length ){ %>
+                    <img style="width: 87px; height: 58px;" src="<%= post.thumbnail.src %>">
+                <% } %>						
+
+                <a href="<%= TemplateTags.getPostLink(post.id) %>" class="pull-left"><%= post.title %></a>
+                &nbsp;<span><%= TemplateTags.formatDate(post.date,'d/m/Y') %></span>       
+                <p><%= post.excerpt %></p>
+
+            </li>
+
+        <% }); %>
+
+    </ul>
+
+<% }else{ %>
+    <p>No post found!</p>
+<% } %>
