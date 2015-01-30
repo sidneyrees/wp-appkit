@@ -377,6 +377,43 @@ define( function( require, exports ) {
 			);
 		}
 	};
+	
+	/************************************************
+	 * Handle components data
+	 */
+
+	/**
+	* Retreives a component data and updates or replaces the current data.
+	* @param String component_id The component slug
+	* @param String type can be :
+	* - "update" : merge new with existing component data, 
+	* - "replace" : delete current component data and replace with new
+	* - "replace-keep-global-items" : for list components : replace component ids and merge global items
+	* @param JSON Object args Set of Key/Value params to add to the web service url
+	* @param callback do_if_ok Receives 3 args : new_component_data, new_component, full_answer
+	* @param callback do_if_error Receives 2 args : error_event, error_message
+	* @param persistent (Optional) Whether to store new component data in local storage. Default false.
+	*/
+	themeApp.syncComponentData = function( component_id, type, args, do_if_ok, do_if_error, persistent ) {
+		
+		var cb_ok = function(new_component_data,result_data){
+			do_if_ok(new_component_data,result_data.component,result_data);
+		};
+		
+		var cb_error = function(error_data){
+			do_if_error(error_data.event,error_data.message);
+		};
+		
+		App.syncComponentData(
+			component_id, 
+			type, 
+			args, 
+			cb_ok, 
+			cb_error, 
+			persistent
+		);
+
+	};
 
 	/************************************************
 	 * DOM element auto class

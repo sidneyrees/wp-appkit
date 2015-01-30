@@ -617,6 +617,9 @@ define(function (require) {
       	return global;
       }
 
+	  /**
+	   * Retrieves more items for a list component
+	   */
       app.getMoreOfComponent = function(component_id,cb_ok,cb_error){
     	  var component = app.components.get(component_id);
     	  if( component ){
@@ -694,6 +697,140 @@ define(function (require) {
 		    	  });
     		  }
     	  }
+      };
+	  
+	  /**
+	   * Retreives a component data and updates or replaces the current data.
+	   * @param String component_id The component slug
+	   * @param String type can be :
+	   * - "update" : merge new with existing component data, 
+	   * - "replace" : delete current component data and replace with new
+	   * - "replace-keep-global-items" : for list components : replace component ids and merge global items
+	   * @param JSON Object args Set of Key/Value params to add to the web service url
+	   * @param callback cb_ok
+	   * @param callback cb_error
+	   * @param persistent (Optional) Whether to store new component data in local storage. Default false.
+	   */
+	  app.syncComponentData = function(component_id,type,args,cb_ok,cb_error,persistent){
+		  
+		  persistent = (persistent !== undefined) && persistent === true;
+		  
+    	  var component = app.components.get(component_id);
+    	  if( component ){
+
+			var token = getToken('component');
+			var ws_url = token +'/component/'+ component_id;
+
+			_.each(args, function(value,key){
+				ws_url = Utils.addParamToUrl(ws_url,key,value);
+			});
+
+			$.ajax({
+				type: 'GET',
+				url: Config.wp_ws_url + ws_url,
+				success: function(answer) {
+					if( answer.result && answer.result.status == 1 ){
+						if( answer.component.slug == component_id ){
+							
+							var component_data = component.get('data');
+
+							var new_component_data = answer.component.data;
+
+							if( component_data.hasOwnProperty('ids') ){ //List component
+							
+								var global = answer.component.global;
+								if( app.globals.hasOwnProperty(global) ){
+
+									var new_ids = [];
+									if( type == "replace" || type == "replace-keep-global-items") {
+										new_ids = new_component_data.ids;
+									}else{
+										new_ids = _.difference(new_component_data.ids,component_data.ids);
+										new_component_data.ids = _.union(component_data.ids,new_component_data.ids); //merge ids
+									}
+									
+									component.set('data',new_component_data);
+
+									var current_items = app.globals[global];
+									if( type == "replace") {
+										current_items.resetAll();
+									}
+									
+									_.each(answer.globals[global],function(item, id){
+										current_items.add(_.extend({id:id},item)); //auto merges if "id" already in items
+									});
+
+									var new_items = [];
+									_.each(new_ids,function(item_id){
+										new_items.push(current_items.get(item_id));
+									});
+									
+									Utils.log('Content data retrieved for component',{type:type,component_id:component_id,new_ids:new_ids,new_items:new_items,component:component});
+
+									if( persistent ) {
+										component.save();
+										current_items.saveAll();
+									}
+
+									cb_ok(component.get('data'),{type:type,component:component,new_items:new_items,new_ids:new_ids,global:global});
+
+								}else{
+									//A list component must have ids and a global > trigger an error :
+									app.triggerError(
+										'getcomponentdata:global-not-found',
+										{type:'not-found',where:'app::getComponentData',message:'Global not found : '+ global},
+										cb_error
+									);
+								}
+								
+							}else{ //Non list component
+								
+								if( type == "update" ) {
+									new_component_data = _.extend(component_data, new_component_data);
+								}else{ //replace
+									//nothing : new_component_data is ready to be set
+								}
+								
+								component.set('data', new_component_data);
+								
+								if( persistent ) {
+									component.save();
+								}
+								
+								cb_ok(component.get('data'),{type:type,component:component});
+
+							}
+							
+						}else{
+							app.triggerError(
+								'getcomponentdata:wrong-component-id',
+								{type:'not-found',where:'app::getComponentData',message:'Wrong component id : '+ component_id},
+								cb_error
+							);
+						}
+					}else{
+						app.triggerError(
+							'getcomponentdata:ws-return-error',
+							{type:'web-service',where:'app::getComponentData',message:'Web service "component" returned an error : ['+ answer.result.message +']'},
+							cb_error
+						);
+					}
+				},
+				error: function(jqXHR, textStatus, errorThrown){
+					app.triggerError(
+						'getcomponentdata:ajax',
+						{type:'ajax',where:'app::getComponentData',message: textStatus + ': '+ errorThrown,data:{url: Config.wp_ws_url + ws_url, jqXHR:jqXHR, textStatus:textStatus, errorThrown:errorThrown}},
+						cb_error
+					);
+				}
+    		});
+    	  }else{
+				app.triggerError(
+					'getcomponentdata:ajax',
+					{type:'not-found',where:'app::getComponentData',message:'Component not found : '+ component_id },
+					cb_error
+				);
+		  }
       };
 
       app.sendInfo = function(info, data){
