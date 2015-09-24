@@ -1,13 +1,23 @@
 define( function( require ) {
 
 	"use strict";
-
+	
 	var Config = require( 'root/config' );
+	var PhonegapFiles  = require( 'core/phonegap/file-system' );
 
 	var phonegap = { };
 
 	phonegap.isLoaded = function() {
 		return window.cordova != undefined;
+	};
+	
+	phonegap.initModules = function() {
+		PhonegapFiles.init( );
+		if( phonegap.isLoaded() ) {
+			//Load file module if available :
+			PhonegapFiles.init( );
+		}
+		
 	};
 
 	phonegap.hideSplashScreen = function() {
