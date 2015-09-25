@@ -39,11 +39,6 @@ require(['root/config'],function(Config){
 				
 				require(Addons.getJs('init','before'),function(){
 					
-					//TODO : maybe do PhoneGap.initModules differently (synchrone) and somewhere else.
-					//And maybe choose somewhere which PhoneGap API the user wants to use, so that
-					//we don't try to load every module systematically...
-					PhoneGap.initModules(); 
-					
 					// Initialize application before using it
 					App.initialize( function() {
 

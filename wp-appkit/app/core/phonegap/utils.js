@@ -11,15 +11,6 @@ define( function( require ) {
 		return window.cordova != undefined;
 	};
 	
-	phonegap.initModules = function() {
-		PhonegapFiles.init( );
-		if( phonegap.isLoaded() ) {
-			//Load file module if available :
-			PhonegapFiles.init( );
-		}
-		
-	};
-
 	phonegap.hideSplashScreen = function() {
 		if ( phonegap.isLoaded() && navigator.splashscreen !== undefined ) {
 			navigator.splashscreen.hide();
