@@ -7,6 +7,7 @@ define(function (require) {
 		Backbone            = require('backbone'),
 		App            		= require('core/app'),
 		Hooks               = require('core/lib/hooks'),
+		Config              = require('root/config'),
 		Utils               = require('core/app-utils');
 
 	Backbone.View.prototype.close = function(){
@@ -36,6 +37,8 @@ define(function (require) {
 
 	    var elMenu = "#app-menu";
 	    var menuView= null;
+		
+		var debugView = null;
 
 	    var region = {};
 
@@ -46,6 +49,24 @@ define(function (require) {
 	    region.off = function(event,callback){
 	    	vent.off(event,callback);
 	    };
+		
+		region.buildDebug = function( cb ) {
+			
+			if ( Config.debug_mode == 'on' ) {
+				require( [ 'core/views/debug', 'jquery.velocity' ], function ( DebugView ) {
+					if ( debugView === null ) {
+						debugView = new DebugView();
+						debugView.render();
+						cb();
+					} else {
+						cb();
+					}
+				} );
+			} else {
+				cb();
+			}
+			
+		};
 
 	    region.buildHead = function(cb){
 	    	if( headView === null ){
