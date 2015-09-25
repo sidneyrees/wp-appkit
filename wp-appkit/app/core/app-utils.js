@@ -2,14 +2,46 @@ define( function( require ) {
 
 	"use strict";
 
+	var _ = require( 'underscore' );
 	var Config = require( 'root/config' );
+
+	/**
+	 * Used in debug mode to memorize log messages history
+	 * @type Array
+	 */
+	var logs = [];
 
 	var utils = { };
 
 	utils.log = function() {
-		if ( console && Config.debug_mode == 'on' ) {
+		if ( Config.debug_mode == 'on' ) {
+			utils.logForced.apply( utils, arguments );
+		}
+	};
+	
+	utils.logForced = function() {
+		
+		if ( console ) {
 			console.log.apply( console, arguments );
 		}
+
+		_.each( arguments, function( item ) {
+			if ( logs.length >= 100 ) {
+				logs.shift();
+			}
+			if (typeof item == 'object') {
+				//This makes to long log outputs!!
+				//TODO : see if we could find an elegant way to display objects
+				//logs.push( ( JSON && JSON.stringify ? JSON.stringify(item) : item ) );
+			} else {
+				logs.push( item );
+			}
+		} );
+		
+	}
+	
+	utils.getLogs = function() {
+		return logs;
 	};
 
 	utils.addParamToUrl = function( uri, key, value ) {

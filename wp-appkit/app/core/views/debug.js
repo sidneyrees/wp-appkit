@@ -5,14 +5,14 @@ define(function (require) {
     var $                   = require('jquery'),
         _                   = require('underscore'),
         Backbone            = require('backbone'),
-        Config              = require('root/config'),
 		Addons              = require('core/addons-internal'),
         Tpl                 = require( 'text!root/debug.html' ),
         App                 = require( 'core/app' ),
+		Utils               = require( 'core/app-utils' ),
 		Hooks               = require('core/lib/hooks');
 
     var self = null;
-
+	
     return Backbone.View.extend({
 
     	initialize : function(args) {
@@ -23,7 +23,7 @@ define(function (require) {
 			
 			$('#app-debug-content',$Tpl).prepend(Addons.getHtml('debug_panel','before'))
 										.append(Addons.getHtml('debug_panel','after'));
-			
+								
 			//jQuery parsing escapes underscore's templating tags : 
 			//we restore them manually :
 			var tpl_html = $Tpl.html();
@@ -52,7 +52,10 @@ define(function (require) {
             var renderedContent = self.template(data);
 
             $el.html( renderedContent );
-
+			
+			var logs = Utils.getLogs();
+			$( "#app-debug-log", $el ).html( logs.reverse().join( '<hr>' ) );
+			
             // Close button (in the header)
             $( "#app-debug-header .app-panel-close" )
                 .on( "touchstart", self.closePanelTapOn )
