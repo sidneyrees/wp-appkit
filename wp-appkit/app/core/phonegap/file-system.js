@@ -15,7 +15,7 @@ define( function( require ) {
 	
 	var file_system = null;
 	
-	var generate_download_filename = function ( remote_file_url, force_extension ) {
+	var generateDownloadFilename = function ( remote_file_url, force_extension ) {
 		
 		var extension = force_extension ? force_extension : remote_file_url.split('.').pop();
 		
@@ -24,6 +24,12 @@ define( function( require ) {
 		var download_filename = hash + '.' + extension;
 		
 		return download_filename;
+	};
+	
+	var getDownloadFileFullPath = function( remote_file_url, force_extension ) {
+		var download_filename = generateDownloadFilename( remote_file_url, force_extension );
+		var download_file = file_system.root.toURL() + download_filename;
+		return download_file;
 	};
 	
 	var loadFileSystem = function( cb_ok, cb_error ) {
@@ -51,27 +57,66 @@ define( function( require ) {
 		}
 	};
 	
-	file_api.download = function ( remote_file_url, options ) {
+	file_api.downloadExists = function( remote_file_url, cb_yes, cb_no, options ) {
 		
-		//Parse options :
-		var force_extension = options.hasOwnProperty( 'extension' ) ? options.extension : '';
-		var cb_ok = options.hasOwnProperty( 'ok' ) ? options.ok : null;
-		var cb_error = options.hasOwnProperty( 'error' ) ? options.error : null;
-		var cb_progress_percent = options.hasOwnProperty( 'progress_percent' ) ? options.progress_percent : null;
-		var cb_progress_not_computable = options.hasOwnProperty( 'progress_not_computable' ) ? options.progress_not_computable : null;
+		var force_extension = options && options.hasOwnProperty( 'extension' ) ? options.extension : '';
 		
 		loadFileSystem( 
 			function() {
 			
-				var download_filename = generate_download_filename( remote_file_url, force_extension );
+				var download_filename = generateDownloadFilename( remote_file_url, force_extension );
 
-				var download_file = file_system.root.toURL() + download_filename;
+				file_system.root.getFile(
+					download_filename, 
+					{ create: false }, 
+					function() {
+						Utils.log( 'YES '+ remote_file_url );
+						cb_yes();
+					},
+					function() {
+						Utils.log( 'NO '+ remote_file_url );
+						cb_no();
+					}
+				);
+		
+			},
+			function() {
+				cb_no();
+			}
+		);
+	}
+	
+	file_api.download = function ( remote_file_url, options ) {
+		
+		//Parse options :
+		var force_extension = options && options.hasOwnProperty( 'extension' ) ? options.extension : '';
+		var cb_ok = options && options.hasOwnProperty( 'ok' ) ? options.ok : null;
+		var cb_error = options && options.hasOwnProperty( 'error' ) ? options.error : null;
+		var cb_progress_percent = options && options.hasOwnProperty( 'progress_percent' ) ? options.progress_percent : null;
+		var cb_progress_not_computable = options && options.hasOwnProperty( 'progress_not_computable' ) ? options.progress_not_computable : null;
+		
+		loadFileSystem( 
+			function() {
+			
+				var download_file = getDownloadFileFullPath( remote_file_url, force_extension );
 
 				remote_file_url = encodeURI( remote_file_url );
 
 				var file_transfer = new FileTransfer();
 
 				file_transfer.onprogress = function ( progress_event ) {
+					/**
+					 * progress_event example (not documented in PhoneGap doc!) : 
+					 * {
+					 *  "bubbles":false,
+					 *  "cancelBubble":false,
+					 *  "cancelable":false,
+					 *  "lengthComputable":true,
+					 *  "loaded":3336952,
+					 *  "total":3336952,
+					 *  "target":null
+					 * }
+					 */
 					if ( progress_event.lengthComputable ) {
 						if ( cb_progress_percent ) {
 							cb_progress_percent( Math.round( 100 * progress_event.loaded / progress_event.total ), progress_event.loaded, progress_event.total );
