@@ -218,11 +218,12 @@ define(function (require) {
 			var custom_rendering = App.getParam('custom-screen-rendering');
 
 			if( !view.is_static || !$(view.el).html().length ){
-	    		if( view.is_static != undefined && view.is_static ){
+	    		var current_screen = App.getCurrentScreenData();
+				if( view.is_static != undefined && view.is_static ){
 					first_static_opening = true;
-	    			Utils.log('Open static view',{screen_data:App.getCurrentScreenData(),view:view});
+	    			Utils.log('Open static view for #'+ current_screen.fragment,{screen_data:current_screen,view:view});
 	    		}else{
-	    			Utils.log('Open view',{screen_data:App.getCurrentScreenData(),view:view});
+	    			Utils.log('Open view for #'+ current_screen.fragment,{screen_data:current_screen,view:view});
 	    		}
 				view.render();
 			} else {
