@@ -41,7 +41,7 @@ define( function( require ) {
 	}
 	
 	utils.getLogs = function() {
-		return logs;
+		return logs.slice(0); //Return a clone of the local array
 	};
 
 	utils.addParamToUrl = function( uri, key, value ) {
