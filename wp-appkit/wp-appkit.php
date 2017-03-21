@@ -39,6 +39,7 @@ if ( !class_exists( 'WpAppKit' ) ) {
 			require_once(dirname( __FILE__ ) . '/lib/addons/addons.php');
 			require_once(dirname( __FILE__ ) . '/lib/user-permissions/user-login.php');
 			require_once(dirname( __FILE__ ) . '/lib/web-services/web-services.php');
+			require_once(dirname( __FILE__ ) . '/lib/web-services/web-services-wp-api.php');
 			require_once(dirname( __FILE__ ) . '/lib/apps/apps.php');
 			require_once(dirname( __FILE__ ) . '/lib/apps/build.php');
 			require_once(dirname( __FILE__ ) . '/lib/themes/themes.php');
